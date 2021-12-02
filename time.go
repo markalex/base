@@ -110,10 +110,15 @@ func (t Time) IsBankingDay() bool {
 	if t.cal.IsHoliday(t.Time) {
 		return false
 	}
-	// and not a monday after a holiday
+	// and not a monday after a sunday holiday
 	if t.Time.Weekday() == time.Monday {
 		sun := t.Time.AddDate(0, 0, -1)
 		return !t.cal.IsHoliday(sun)
+	}
+	// and not a friday before a saturday holiday
+	if t.Time.Weekday() == time.Friday {
+		sat := t.Time.AddDate(0, 0, 1)
+		return !t.cal.IsHoliday(sat)
 	}
 	return true
 }

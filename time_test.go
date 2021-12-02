@@ -249,9 +249,9 @@ func TestTime_AddBankingDay(t *testing.T) {
 		{unchangeable, unchangeable, 501},
 		{unchangeable, unchangeable, 600},
 		// Input at the max
-		{time.Date(2021, time.July, 2, 1, 0, 0, 0, est), time.Date(2023, time.June, 28, 1, 0, 0, 0, est), 500},
+		{time.Date(2021, time.July, 2, 1, 0, 0, 0, est), time.Date(2023, time.June, 30, 1, 0, 0, 0, est), 500},
 		// Find one year in the future
-		{time.Date(2021, time.July, 2, 1, 0, 0, 0, est), time.Date(2022, time.June, 28, 1, 0, 0, 0, est), 365 - 12 - (52 * 2)},
+		{time.Date(2021, time.July, 2, 1, 0, 0, 0, est), time.Date(2022, time.June, 30, 1, 0, 0, 0, est), 365 - 12 - (52 * 2)},
 	}
 	for _, test := range tests {
 		actual := NewTime(test.Date).AddBankingDay(test.Days)
@@ -302,5 +302,24 @@ func TestTime__SundayHoliday(t *testing.T) {
 	}
 	if wd := ts.Weekday(); wd != time.Tuesday {
 		t.Errorf("expected Tuesday, got %s", wd)
+	}
+}
+
+func TestTime__SaturdayHoliday(t *testing.T) {
+	// "if any holiday falls on a Saturday, the next preceding Friday is a standard
+	// Federal Reserve Bank holiday"
+
+	// 2021-12-25 (Christmas Day) is on a Saturday
+	eastern, _ := time.LoadLocation("America/New_York")
+	ts := NewTime(time.Date(2021, time.December, 25, 10, 30, 0, 0, eastern)) // 10:30am
+
+	if ts.IsBankingDay() || !ts.IsWeekend() {
+		t.Errorf("%s it not a banking day", ts)
+	}
+
+	// move back one day, Friday should not be a BankingDay
+	ts.Time = ts.Time.AddDate(0, 0, -1)
+	if ts.IsBankingDay() && ts.Weekday() == time.Friday {
+		t.Errorf("%s should not be a banking day", ts)
 	}
 }
